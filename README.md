@@ -22,13 +22,14 @@ When you are sending a ping request, do the following:
 <b>Chat Bot Example</b>
 --------
 
-See ch.spacebase.mcprotocol.example.ChatBot
+See org.spacehq.mcprotocol.example.ChatBot
 
 
 <b>Building the Source</b>
 --------
 
 MCProtocolLib uses Maven to manage dependencies. Simply run 'mvn clean install' in the source's directory.
+You can also download a build <b>[here](http://build.spacehq.org/job/MCProtocolLibPre1.7.2/)</b>.
 
 
 <b>License</b>
