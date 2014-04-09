@@ -1,9 +1,28 @@
 package org.spacehq.mcprotocol.standard.packet;
 
+import org.bouncycastle.crypto.CipherKeyGenerator;
+import org.bouncycastle.crypto.KeyGenerationParameters;
+import org.spacehq.mc.auth.GameProfile;
+import org.spacehq.mc.auth.SessionService;
+import org.spacehq.mc.auth.exception.AuthenticationException;
+import org.spacehq.mc.auth.exception.AuthenticationUnavailableException;
+import org.spacehq.mc.auth.exception.InvalidCredentialsException;
 import org.spacehq.mcprotocol.event.PacketVisitor;
-import java.io.BufferedReader;
+import org.spacehq.mcprotocol.net.Client;
+import org.spacehq.mcprotocol.net.ServerConnection;
 import org.spacehq.mcprotocol.net.io.NetInput;
 import org.spacehq.mcprotocol.net.io.NetOutput;
+import org.spacehq.mcprotocol.packet.Packet;
+import org.spacehq.mcprotocol.standard.StandardClient;
+import org.spacehq.mcprotocol.util.Util;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
@@ -16,22 +35,6 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.bouncycastle.crypto.CipherKeyGenerator;
-import org.bouncycastle.crypto.KeyGenerationParameters;
-
-import org.spacehq.mcprotocol.net.Client;
-import org.spacehq.mcprotocol.net.ServerConnection;
-import org.spacehq.mcprotocol.packet.Packet;
-import org.spacehq.mcprotocol.standard.StandardClient;
-import org.spacehq.mcprotocol.util.Util;
 
 public class PacketKeyRequest extends Packet {
 
@@ -85,10 +88,7 @@ public class PacketKeyRequest extends Packet {
 		SecretKey secret = generateKey();
 		if(!this.serverId.equals("-")) {
 			String encrypted = new BigInteger(Util.encrypt(this.serverId, key, secret)).toString(16);
-			String response = joinServer(conn.getUsername(), ((StandardClient) conn).getSessionId(), encrypted);
-			if(!response.equalsIgnoreCase("ok")) {
-				Util.logger().severe("Failed to login to session.minecraft.net! (RESPONSE: \"" + response + "\")");
-				conn.disconnect("Failed to login to session.minecraft.net!");
+			if(!joinServer(conn, encrypted)) {
 				return;
 			}
 		}
@@ -148,16 +148,21 @@ public class PacketKeyRequest extends Packet {
 		}
 	}
 
-	private static String joinServer(String user, String session, String key) {
+	private static boolean joinServer(Client client, String key) {
+		GameProfile profile = ((StandardClient) client).getProfile();
+		String accessToken = ((StandardClient) client).getAccessToken();
 		try {
-			URL url = new URL("http://session.minecraft.net/game/joinserver.jsp?user=" + URLEncoder.encode(user, "UTF-8") + "&sessionId=" + URLEncoder.encode(session, "UTF-8") + "&serverId=" + URLEncoder.encode(key, "UTF-8"));
-			BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-			String response = reader.readLine();
-			reader.close();
-			return response;
-		} catch(IOException e) {
-			return e.toString();
+			new SessionService().joinServer(profile, accessToken, key);
+			return true;
+		} catch(AuthenticationUnavailableException e) {
+			client.disconnect("Login failed: Authentication service unavailable.");
+		} catch(InvalidCredentialsException e) {
+			client.disconnect("Login failed: Invalid login session.");
+		} catch(AuthenticationException e) {
+			client.disconnect("Login failed: Authentication error: " + e.getMessage());
 		}
+
+		return false;
 	}
 
 	@Override

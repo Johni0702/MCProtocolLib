@@ -1,25 +1,18 @@
 package org.spacehq.mcprotocol.standard;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.Socket;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.net.UnknownHostException;
-
+import org.spacehq.mc.auth.GameProfile;
+import org.spacehq.mc.auth.UserAuthentication;
+import org.spacehq.mc.auth.exception.AuthenticationException;
 import org.spacehq.mcprotocol.exception.ConnectException;
 import org.spacehq.mcprotocol.exception.LoginException;
-import org.spacehq.mcprotocol.exception.OutdatedLibraryException;
 import org.spacehq.mcprotocol.net.Client;
 import org.spacehq.mcprotocol.standard.packet.PacketHandshake;
-import org.spacehq.mcprotocol.util.Constants;
-import org.spacehq.mcprotocol.util.Util;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.UUID;
 
 /**
  * A client implementing standard Minecraft protocol.
@@ -27,14 +20,14 @@ import org.spacehq.mcprotocol.util.Util;
 public class StandardClient extends StandardConnection implements Client {
 
 	/**
-	 * The client's session id.
+	 * The client's profile.
 	 */
-	private String sessionId;
+	private GameProfile profile;
 
 	/**
-	 * Whether the client is logged in.
+	 * The client's access token.
 	 */
-	private boolean loggedIn;
+	private String accessToken;
 
 	/**
 	 * Creates a new standard client.
@@ -46,162 +39,54 @@ public class StandardClient extends StandardConnection implements Client {
 	}
 
 	/**
-	 * Gets the client's session id.
-	 * @return The client's session id.
+	 * Gets the client's profile.
+	 * @return The client's profile.
 	 */
-	public String getSessionId() {
-		return this.sessionId;
-	}
-
-	@Override
-	public boolean login(String username, String password) throws LoginException, OutdatedLibraryException {
-		if(this.loggedIn || this.getUsername() != null) {
-			throw new IllegalStateException("Already logged in with username: " + this.getUsername());
-		}
-
-		URL url = null;
-
-		try {
-			url = new URL("https://login.minecraft.net/");
-		} catch(MalformedURLException e) {
-			throw new LoginException("Login URL is malformed?", e);
-		}
-
-		String params = "";
-
-		try {
-			params = "user=" + URLEncoder.encode(username, "UTF-8") + "&password=" + URLEncoder.encode(password, "UTF-8") + "&version=" + Constants.LAUNCHER_VERSION;
-		} catch(UnsupportedEncodingException e) {
-			throw new LoginException("UTF-8 unsupported", e);
-		}
-
-		HttpURLConnection conn = null;
-
-		try {
-			Util.logger().info("Sending info to login.minecraft.net...");
-			conn = (HttpURLConnection) url.openConnection();
-			conn.setRequestMethod("POST");
-			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-			conn.setRequestProperty("Content-Length", Integer.toString(params.getBytes().length));
-			conn.setRequestProperty("Content-Language", "en-US");
-			conn.setUseCaches(false);
-			conn.setDoInput(true);
-			conn.setDoOutput(true);
-			conn.setReadTimeout(1000 * 60 * 10);
-
-			conn.connect();
-
-			DataOutputStream out = new DataOutputStream(conn.getOutputStream());
-			out.writeBytes(params);
-			out.flush();
-			out.close();
-
-			if(conn.getResponseCode() != 200) {
-				throw new LoginException("Login returned response " + conn.getResponseCode() + ": " + conn.getResponseMessage());
-			}
-
-			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
-			StringBuilder build = new StringBuilder();
-
-			char[] buffer = new char[1024];
-			int length = 0;
-			while((length = reader.read(buffer)) != -1) {
-				build.append(buffer, 0, length);
-			}
-
-			String result = build.toString();
-			if(result.contains(":")) {
-				String[] values = result.split(":");
-
-				try {
-					this.setUsername(values[2].trim());
-					this.sessionId = values[3].trim();
-					this.loggedIn = true;
-
-					new Thread(new KeepAliveTask()).start();
-				} catch(ArrayIndexOutOfBoundsException e) {
-					throw new LoginException("Response contained incorrect amount of parameters: " + result);
-				}
-
-				Util.logger().info("Finished logging in to minecraft.net");
-				return true;
-			} else {
-				if(result.trim().equals("Old version")) {
-					throw new OutdatedLibraryException();
-				} else {
-					throw new LoginException(result.trim());
-				}
-			}
-		} catch(IOException e) {
-			throw new LoginException("Failed to login", e);
-		} finally {
-			if(conn != null) conn.disconnect();
-			conn = null;
-		}
-	}
-
-	@Override
-	public void disconnect(String reason, boolean packet) {
-		this.loggedIn = false;
-		super.disconnect(reason, packet);
+	public GameProfile getProfile() {
+		return this.profile;
 	}
 
 	/**
-	 * A task that keeps the client's minecraft.net session alive.
+	 * Gets the client's session id.
+	 * @return The client's session id.
 	 */
-	private class KeepAliveTask implements Runnable {
-		/**
-		 * The minecraft.net session URL.
-		 */
-		private URL url;
+	public String getAccessToken() {
+		return this.accessToken;
+	}
 
-		/**
-		 * The time when a keep alive was last sent.
-		 */
-		private long last;
+	@Override
+	public String getUsername() {
+		return this.profile != null ? this.profile.getName() : null;
+	}
 
-		/**
-		 * Creates a new keep alive task runnable.
-		 * @throws LoginException If a login error occurs.
-		 */
-		public KeepAliveTask() throws LoginException {
-			try {
-				this.url = new URL("https://login.minecraft.net/");
-			} catch(MalformedURLException e) {
-				throw new LoginException("Failed to create keep alive URL!", e);
-			}
+	@Override
+	public void setUsername(String username) {
+		if(this.profile != null) {
+			return;
 		}
 
-		@Override
-		public void run() {
-			this.last = System.currentTimeMillis();
-			while(loggedIn) {
-				if(System.currentTimeMillis() - this.last >= 300000) {
-					HttpURLConnection conn = null;
+		this.profile = new GameProfile((UUID) null, username);
+	}
 
-					try {
-						conn = (HttpURLConnection) url.openConnection();
-						conn.setRequestMethod("POST");
-						conn.setUseCaches(false);
-						conn.setDoInput(true);
-						conn.setDoOutput(true);
-						conn.setReadTimeout(1000 * 60 * 10);
-						conn.connect();
-					} catch(IOException e) {
-						Util.logger().severe("Failed to send keep alive to login.minecraft.net!");
-						e.printStackTrace();
-					} finally {
-						if(conn != null) conn.disconnect();
-						conn = null;
-					}
-				}
-
-				try {
-					Thread.sleep(2);
-				} catch(InterruptedException e) {
-				}
-			}
+	@Override
+	public boolean login(String username, String password) throws LoginException {
+		if(this.profile != null) {
+			throw new LoginException("Already logged in with username: " + this.getProfile().getName());
 		}
+
+		String clientToken = UUID.randomUUID().toString();
+		UserAuthentication auth = new UserAuthentication(clientToken);
+		auth.setUsername(username);
+		auth.setPassword(password);
+		try {
+			auth.login();
+		} catch(AuthenticationException e) {
+			throw new LoginException("Failed to login to minecraft.net", e);
+		}
+
+		this.profile = auth.getSelectedProfile();
+		this.accessToken = auth.getAccessToken();
+		return true;
 	}
 
 	@Override
