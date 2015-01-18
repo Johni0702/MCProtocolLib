@@ -20,18 +20,22 @@ public enum ChatColor {
     WHITE,
     RESET;
 
-    @Override
-    public String toString() {
-        return this.name().toLowerCase();
-    }
+	static final ChatColor[] values = values();
 
-    public static ChatColor byName(String name) {
-        name = name.toLowerCase();
-        for(ChatColor color : values()) {
-            if(color.toString().equals(name)) {
-                return color;
-            }
-        }
+	private final String str = name().toLowerCase();
+
+	@Override
+	public String toString() {
+		return str;
+	}
+
+	public static ChatColor byName(String name) {
+		name = name.toLowerCase();
+		for(ChatColor color : values) {
+			if(color.toString().equals(name)) {
+				return color;
+			}
+		}
 
         return null;
     }

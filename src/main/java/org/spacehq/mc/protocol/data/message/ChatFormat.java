@@ -8,18 +8,22 @@ public enum ChatFormat {
     ITALIC,
     OBFUSCATED;
 
-    @Override
-    public String toString() {
-        return this.name().toLowerCase();
-    }
+	static final ChatFormat[] values = values();
 
-    public static ChatFormat byName(String name) {
-        name = name.toLowerCase();
-        for(ChatFormat format : values()) {
-            if(format.toString().equals(name)) {
-                return format;
-            }
-        }
+	private final String str = name().toLowerCase();
+
+	@Override
+	public String toString() {
+		return str;
+	}
+
+	public static ChatFormat byName(String name) {
+		name = name.toLowerCase();
+		for(ChatFormat format : values) {
+			if(format.toString().equals(name)) {
+				return format;
+			}
+		}
 
         return null;
     }
