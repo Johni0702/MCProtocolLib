@@ -1,6 +1,7 @@
 package org.spacehq.mc.protocol.packet.ingame.client;
 
 import org.spacehq.mc.protocol.data.game.values.MagicValues;
+import org.spacehq.mc.protocol.data.game.values.entity.player.Handedness;
 import org.spacehq.mc.protocol.data.game.values.setting.ChatVisibility;
 import org.spacehq.mc.protocol.data.game.values.setting.SkinPart;
 import org.spacehq.packetlib.io.NetInput;
@@ -19,16 +20,19 @@ public class ClientSettingsPacket implements Packet {
     private ChatVisibility chatVisibility;
     private boolean chatColors;
     private List<SkinPart> visibleParts;
+    private Handedness handedness;
 
     @SuppressWarnings("unused")
     private ClientSettingsPacket() {
     }
 
-    public ClientSettingsPacket(String locale, int renderDistance, ChatVisibility chatVisibility, boolean chatColors, SkinPart... visibleParts) {
+    public ClientSettingsPacket(String locale, int renderDistance, ChatVisibility chatVisibility, boolean chatColors,
+                                Handedness handedness, SkinPart... visibleParts) {
         this.locale = locale;
         this.renderDistance = renderDistance;
         this.chatVisibility = chatVisibility;
         this.chatColors = chatColors;
+        this.handedness = handedness;
         this.visibleParts = Arrays.asList(visibleParts);
     }
 
@@ -52,6 +56,10 @@ public class ClientSettingsPacket implements Packet {
         return this.visibleParts;
     }
 
+    public Handedness getHandedness() {
+        return this.handedness;
+    }
+
     @Override
     public void read(NetInput in) throws IOException {
         this.locale = in.readString();
@@ -66,6 +74,7 @@ public class ClientSettingsPacket implements Packet {
                 this.visibleParts.add(part);
             }
         }
+        this.handedness = MagicValues.key(Handedness.class, in.readUnsignedByte());
     }
 
     @Override
@@ -80,6 +89,7 @@ public class ClientSettingsPacket implements Packet {
         }
 
         out.writeByte(flags);
+        out.writeByte(MagicValues.value(Integer.class, handedness));
     }
 
     @Override

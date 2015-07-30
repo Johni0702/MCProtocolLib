@@ -1,6 +1,7 @@
 package org.spacehq.mc.protocol.packet.ingame.client.player;
 
 import org.spacehq.mc.protocol.data.game.values.MagicValues;
+import org.spacehq.mc.protocol.data.game.values.entity.player.Hand;
 import org.spacehq.mc.protocol.data.game.values.entity.player.InteractAction;
 import org.spacehq.packetlib.io.NetInput;
 import org.spacehq.packetlib.io.NetOutput;
@@ -12,6 +13,7 @@ public class ClientPlayerInteractEntityPacket implements Packet {
 
     private int entityId;
     private InteractAction action;
+    private Hand hand;
 
     private float targetX;
     private float targetY;
@@ -21,13 +23,14 @@ public class ClientPlayerInteractEntityPacket implements Packet {
     private ClientPlayerInteractEntityPacket() {
     }
 
-    public ClientPlayerInteractEntityPacket(int entityId, InteractAction action) {
-        this(entityId, action, 0, 0, 0);
+    public ClientPlayerInteractEntityPacket(int entityId, InteractAction action, Hand hand) {
+        this(entityId, action, hand, 0, 0, 0);
     }
 
-    public ClientPlayerInteractEntityPacket(int entityId, InteractAction action, float targetX, float targetY, float targetZ) {
+    public ClientPlayerInteractEntityPacket(int entityId, InteractAction action, Hand hand, float targetX, float targetY, float targetZ) {
         this.entityId = entityId;
         this.action = action;
+        this.hand = hand;
         this.targetX = targetX;
         this.targetY = targetY;
         this.targetZ = targetZ;
@@ -41,6 +44,10 @@ public class ClientPlayerInteractEntityPacket implements Packet {
         return this.action;
     }
 
+    public Hand getHand() {
+        return this.hand;
+    }
+
     @Override
     public void read(NetInput in) throws IOException {
         this.entityId = in.readVarInt();
@@ -49,6 +56,9 @@ public class ClientPlayerInteractEntityPacket implements Packet {
             this.targetX = in.readFloat();
             this.targetY = in.readFloat();
             this.targetZ = in.readFloat();
+        }
+        if (this.action == InteractAction.INTERACT || this.action == InteractAction.INTERACT_AT) {
+            this.hand = MagicValues.key(Hand.class, in.readUnsignedByte());
         }
     }
 
@@ -60,6 +70,9 @@ public class ClientPlayerInteractEntityPacket implements Packet {
             out.writeFloat(this.targetX);
             out.writeFloat(this.targetY);
             out.writeFloat(this.targetZ);
+        }
+        if (this.action == InteractAction.INTERACT || this.action == InteractAction.INTERACT_AT) {
+            out.writeByte(MagicValues.value(Integer.class, hand));
         }
     }
 

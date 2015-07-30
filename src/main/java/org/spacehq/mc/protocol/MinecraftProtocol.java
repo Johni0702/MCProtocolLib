@@ -1,8 +1,8 @@
 package org.spacehq.mc.protocol;
 
 import org.spacehq.mc.auth.data.GameProfile;
-import org.spacehq.mc.auth.service.AuthenticationService;
 import org.spacehq.mc.auth.exception.request.RequestException;
+import org.spacehq.mc.auth.service.AuthenticationService;
 import org.spacehq.mc.protocol.data.SubProtocol;
 import org.spacehq.mc.protocol.packet.handshake.client.HandshakePacket;
 import org.spacehq.mc.protocol.packet.ingame.client.ClientChatPacket;
@@ -25,6 +25,7 @@ import org.spacehq.mc.protocol.packet.ingame.client.player.ClientPlayerStatePack
 import org.spacehq.mc.protocol.packet.ingame.client.player.ClientSpectatePacket;
 import org.spacehq.mc.protocol.packet.ingame.client.player.ClientSteerVehiclePacket;
 import org.spacehq.mc.protocol.packet.ingame.client.player.ClientSwingArmPacket;
+import org.spacehq.mc.protocol.packet.ingame.client.player.ClientUseItemPacket;
 import org.spacehq.mc.protocol.packet.ingame.client.window.ClientCloseWindowPacket;
 import org.spacehq.mc.protocol.packet.ingame.client.window.ClientConfirmTransactionPacket;
 import org.spacehq.mc.protocol.packet.ingame.client.window.ClientCreativeInventoryActionPacket;
@@ -56,7 +57,6 @@ import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityEquipment
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityHeadLookPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityMetadataPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityMovementPacket;
-import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityNBTUpdatePacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityPositionPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityPositionRotationPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityPropertiesPacket;
@@ -65,6 +65,7 @@ import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityRotationP
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityStatusPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityTeleportPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerEntityVelocityPacket;
+import org.spacehq.mc.protocol.packet.ingame.server.entity.ServerUpdateBossBarPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.player.ServerChangeHeldItemPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.player.ServerPlayerAbilitiesPacket;
 import org.spacehq.mc.protocol.packet.ingame.server.entity.player.ServerPlayerPositionRotationPacket;
@@ -386,7 +387,7 @@ public class MinecraftProtocol extends PacketProtocol {
         this.registerIncoming(70, ServerSetCompressionPacket.class);
         this.registerIncoming(71, ServerPlayerListDataPacket.class);
         this.registerIncoming(72, ServerResourcePackSendPacket.class);
-        this.registerIncoming(73, ServerEntityNBTUpdatePacket.class);
+        this.registerIncoming(73, ServerUpdateBossBarPacket.class);
 
         this.registerOutgoing(0, ClientKeepAlivePacket.class);
         this.registerOutgoing(1, ClientChatPacket.class);
@@ -396,24 +397,25 @@ public class MinecraftProtocol extends PacketProtocol {
         this.registerOutgoing(5, ClientPlayerRotationPacket.class);
         this.registerOutgoing(6, ClientPlayerPositionRotationPacket.class);
         this.registerOutgoing(7, ClientPlayerActionPacket.class);
-        this.registerOutgoing(8, ClientPlayerPlaceBlockPacket.class);
-        this.registerOutgoing(9, ClientChangeHeldItemPacket.class);
-        this.registerOutgoing(10, ClientSwingArmPacket.class);
-        this.registerOutgoing(11, ClientPlayerStatePacket.class);
-        this.registerOutgoing(12, ClientSteerVehiclePacket.class);
-        this.registerOutgoing(13, ClientCloseWindowPacket.class);
-        this.registerOutgoing(14, ClientWindowActionPacket.class);
-        this.registerOutgoing(15, ClientConfirmTransactionPacket.class);
-        this.registerOutgoing(16, ClientCreativeInventoryActionPacket.class);
-        this.registerOutgoing(17, ClientEnchantItemPacket.class);
-        this.registerOutgoing(18, ClientUpdateSignPacket.class);
-        this.registerOutgoing(19, ClientPlayerAbilitiesPacket.class);
-        this.registerOutgoing(20, ClientTabCompletePacket.class);
-        this.registerOutgoing(21, ClientSettingsPacket.class);
-        this.registerOutgoing(22, ClientRequestPacket.class);
-        this.registerOutgoing(23, ClientPluginMessagePacket.class);
-        this.registerOutgoing(24, ClientSpectatePacket.class);
-        this.registerOutgoing(25, ClientResourcePackStatusPacket.class);
+        this.registerOutgoing(8, ClientUseItemPacket.class);
+        this.registerOutgoing(9, ClientPlayerPlaceBlockPacket.class);
+        this.registerOutgoing(10, ClientChangeHeldItemPacket.class);
+        this.registerOutgoing(11, ClientSwingArmPacket.class);
+        this.registerOutgoing(12, ClientPlayerStatePacket.class);
+        this.registerOutgoing(13, ClientSteerVehiclePacket.class);
+        this.registerOutgoing(14, ClientCloseWindowPacket.class);
+        this.registerOutgoing(15, ClientWindowActionPacket.class);
+        this.registerOutgoing(16, ClientConfirmTransactionPacket.class);
+        this.registerOutgoing(17, ClientCreativeInventoryActionPacket.class);
+        this.registerOutgoing(18, ClientEnchantItemPacket.class);
+        this.registerOutgoing(19, ClientUpdateSignPacket.class);
+        this.registerOutgoing(20, ClientPlayerAbilitiesPacket.class);
+        this.registerOutgoing(21, ClientTabCompletePacket.class);
+        this.registerOutgoing(22, ClientSettingsPacket.class);
+        this.registerOutgoing(23, ClientRequestPacket.class);
+        this.registerOutgoing(24, ClientPluginMessagePacket.class);
+        this.registerOutgoing(25, ClientSpectatePacket.class);
+        this.registerOutgoing(26, ClientResourcePackStatusPacket.class);
     }
 
     private void initServerGame(Session session) {
@@ -425,24 +427,25 @@ public class MinecraftProtocol extends PacketProtocol {
         this.registerIncoming(5, ClientPlayerRotationPacket.class);
         this.registerIncoming(6, ClientPlayerPositionRotationPacket.class);
         this.registerIncoming(7, ClientPlayerActionPacket.class);
-        this.registerIncoming(8, ClientPlayerPlaceBlockPacket.class);
-        this.registerIncoming(9, ClientChangeHeldItemPacket.class);
-        this.registerIncoming(10, ClientSwingArmPacket.class);
-        this.registerIncoming(11, ClientPlayerStatePacket.class);
-        this.registerIncoming(12, ClientSteerVehiclePacket.class);
-        this.registerIncoming(13, ClientCloseWindowPacket.class);
-        this.registerIncoming(14, ClientWindowActionPacket.class);
-        this.registerIncoming(15, ClientConfirmTransactionPacket.class);
-        this.registerIncoming(16, ClientCreativeInventoryActionPacket.class);
-        this.registerIncoming(17, ClientEnchantItemPacket.class);
-        this.registerIncoming(18, ClientUpdateSignPacket.class);
-        this.registerIncoming(19, ClientPlayerAbilitiesPacket.class);
-        this.registerIncoming(20, ClientTabCompletePacket.class);
-        this.registerIncoming(21, ClientSettingsPacket.class);
-        this.registerIncoming(22, ClientRequestPacket.class);
-        this.registerIncoming(23, ClientPluginMessagePacket.class);
-        this.registerIncoming(24, ClientSpectatePacket.class);
-        this.registerIncoming(25, ClientResourcePackStatusPacket.class);
+        this.registerIncoming(8, ClientUseItemPacket.class);
+        this.registerIncoming(9, ClientPlayerPlaceBlockPacket.class);
+        this.registerIncoming(10, ClientChangeHeldItemPacket.class);
+        this.registerIncoming(11, ClientSwingArmPacket.class);
+        this.registerIncoming(12, ClientPlayerStatePacket.class);
+        this.registerIncoming(13, ClientSteerVehiclePacket.class);
+        this.registerIncoming(14, ClientCloseWindowPacket.class);
+        this.registerIncoming(15, ClientWindowActionPacket.class);
+        this.registerIncoming(16, ClientConfirmTransactionPacket.class);
+        this.registerIncoming(17, ClientCreativeInventoryActionPacket.class);
+        this.registerIncoming(18, ClientEnchantItemPacket.class);
+        this.registerIncoming(19, ClientUpdateSignPacket.class);
+        this.registerIncoming(20, ClientPlayerAbilitiesPacket.class);
+        this.registerIncoming(21, ClientTabCompletePacket.class);
+        this.registerIncoming(22, ClientSettingsPacket.class);
+        this.registerIncoming(23, ClientRequestPacket.class);
+        this.registerIncoming(24, ClientPluginMessagePacket.class);
+        this.registerIncoming(25, ClientSpectatePacket.class);
+        this.registerIncoming(26, ClientResourcePackStatusPacket.class);
 
         this.registerOutgoing(0, ServerKeepAlivePacket.class);
         this.registerOutgoing(1, ServerJoinGamePacket.class);
@@ -517,7 +520,7 @@ public class MinecraftProtocol extends PacketProtocol {
         this.registerOutgoing(70, ServerSetCompressionPacket.class);
         this.registerOutgoing(71, ServerPlayerListDataPacket.class);
         this.registerOutgoing(72, ServerResourcePackSendPacket.class);
-        this.registerOutgoing(73, ServerEntityNBTUpdatePacket.class);
+        this.registerOutgoing(73, ServerUpdateBossBarPacket.class);
     }
 
     private void initClientStatus(Session session) {

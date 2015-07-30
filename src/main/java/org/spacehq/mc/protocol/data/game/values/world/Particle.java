@@ -42,7 +42,9 @@ public enum Particle {
     BLOCK_DUST(1),
     WATER_DROP,
     ITEM_TAKE,
-    MOB_APPEARANCE;
+    MOB_APPEARANCE,
+    DRAGON_BREATH,
+    END_ROD;
 
     private int dataLength;
 

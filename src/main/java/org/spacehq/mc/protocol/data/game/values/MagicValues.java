@@ -12,10 +12,15 @@ import org.spacehq.mc.protocol.data.game.values.entity.MobType;
 import org.spacehq.mc.protocol.data.game.values.entity.ModifierOperation;
 import org.spacehq.mc.protocol.data.game.values.entity.ModifierType;
 import org.spacehq.mc.protocol.data.game.values.entity.ObjectType;
+import org.spacehq.mc.protocol.data.game.values.entity.bossbar.BossBarAction;
+import org.spacehq.mc.protocol.data.game.values.entity.bossbar.BossBarColor;
+import org.spacehq.mc.protocol.data.game.values.entity.bossbar.BossBarType;
 import org.spacehq.mc.protocol.data.game.values.entity.player.Animation;
 import org.spacehq.mc.protocol.data.game.values.entity.player.BlockBreakStage;
 import org.spacehq.mc.protocol.data.game.values.entity.player.CombatState;
 import org.spacehq.mc.protocol.data.game.values.entity.player.GameMode;
+import org.spacehq.mc.protocol.data.game.values.entity.player.Hand;
+import org.spacehq.mc.protocol.data.game.values.entity.player.Handedness;
 import org.spacehq.mc.protocol.data.game.values.entity.player.InteractAction;
 import org.spacehq.mc.protocol.data.game.values.entity.player.PlayerAction;
 import org.spacehq.mc.protocol.data.game.values.entity.player.PlayerState;
@@ -133,6 +138,7 @@ public class MagicValues {
         register(PlayerAction.DROP_ITEM_STACK, 3);
         register(PlayerAction.DROP_ITEM, 4);
         register(PlayerAction.RELEASE_USE_ITEM, 5);
+        register(PlayerAction.SWAP_HELD_ITEMS, 6);
 
         register(Face.BOTTOM, 0);
         register(Face.TOP, 1);
@@ -565,6 +571,8 @@ public class MagicValues {
         register(Particle.WATER_DROP, 39);
         register(Particle.ITEM_TAKE, 40);
         register(Particle.MOB_APPEARANCE, 41);
+        register(Particle.DRAGON_BREATH, 42);
+        register(Particle.END_ROD, 43);
 
         register(GenericSound.CLICK, "random.click");
         register(GenericSound.FIZZ, "random.fizz");
@@ -792,6 +800,27 @@ public class MagicValues {
         register(PistonValue.NORTH, 4);
         register(PistonValue.EAST, 5);
 
+        register(BossBarAction.ADD, 0);
+        register(BossBarAction.REMOVE, 1);
+        register(BossBarAction.UPDATE_PERCENT, 2);
+        register(BossBarAction.UPDATE_TEXT, 3);
+        register(BossBarAction.UPDATE_STYLE, 4);
+        register(BossBarAction.UPDATE_PROPERTIES, 5);
+
+        register(BossBarColor.PINK, 0);
+        register(BossBarColor.BLUE, 1);
+        register(BossBarColor.RED, 2);
+        register(BossBarColor.GREEN, 3);
+        register(BossBarColor.YELLOW, 4);
+        register(BossBarColor.PURPLE, 5);
+        register(BossBarColor.WHITE, 6);
+
+        register(BossBarType.CONTINUOUS, 0);
+        register(BossBarType.PARTS_6, 1);
+        register(BossBarType.PARTS_10, 2);
+        register(BossBarType.PARTS_12, 3);
+        register(BossBarType.PARTS_20, 4);
+
         register(SoundEffect.CLICK, 1000);
         register(SoundEffect.EMPTY_DISPENSER_CLICK, 1001);
         register(SoundEffect.FIRE_PROJECTILE, 1002);
@@ -881,6 +910,12 @@ public class MagicValues {
         register(ResourcePackStatus.DECLINED, 1);
         register(ResourcePackStatus.FAILED_DOWNLOAD, 2);
         register(ResourcePackStatus.ACCEPTED, 3);
+
+        register(Hand.MAIN_HAND, 0);
+        register(Hand.OFF_HAND, 1);
+
+        register(Handedness.LEFT_HANDED, 0);
+        register(Handedness.RIGHT_HANDED, 1);
     }
 
     private static void register(Enum<?> key, Object value) {

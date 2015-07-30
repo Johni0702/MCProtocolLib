@@ -2,8 +2,8 @@ package org.spacehq.mc.protocol;
 
 public class MinecraftConstants {
     // General Constants
-    public static final String GAME_VERSION = "1.8.8";
-    public static final int PROTOCOL_VERSION = 47;
+    public static final String GAME_VERSION = "15w31a";
+    public static final int PROTOCOL_VERSION = 49;
 
     // General Key Constants
     public static final String PROFILE_KEY = "profile";

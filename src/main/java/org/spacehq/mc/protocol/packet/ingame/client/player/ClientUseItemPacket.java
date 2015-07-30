@@ -8,15 +8,15 @@ import org.spacehq.packetlib.packet.Packet;
 
 import java.io.IOException;
 
-public class ClientSwingArmPacket implements Packet {
+public class ClientUseItemPacket implements Packet {
 
     private Hand hand;
 
     @SuppressWarnings("unused")
-    private ClientSwingArmPacket() {
+    private ClientUseItemPacket() {
     }
 
-    public ClientSwingArmPacket(Hand hand) {
+    public ClientUseItemPacket(Hand hand) {
         this.hand = hand;
     }
 
@@ -26,17 +26,16 @@ public class ClientSwingArmPacket implements Packet {
 
     @Override
     public void read(NetInput in) throws IOException {
-        this.hand = MagicValues.key(Hand.class, in.readByte());
+        hand = MagicValues.key(Hand.class, in.readUnsignedByte());
     }
 
     @Override
     public void write(NetOutput out) throws IOException {
-        out.writeByte(MagicValues.value(Byte.class, this.hand));
+        out.writeByte(MagicValues.value(Integer.class, hand));
     }
 
     @Override
     public boolean isPriority() {
         return false;
     }
-
 }
