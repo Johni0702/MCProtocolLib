@@ -884,6 +884,13 @@ public class MagicValues<T extends Enum<T>> {
         register(ResourcePackStatus.ACCEPTED, 3);
     }
 
+    private static <T extends Enum<T>> void registerDefault(T key, Object value) {
+        register(key, value);
+        MagicValues<T> values = ofType(key.getDeclaringClass());
+        values.defaultKey = key;
+        values.defaultValue = value instanceof Number ? ((Number) value).doubleValue() : value;
+    }
+
     private static <T extends Enum<T>> void register(T key, Object value) {
         MagicValues<T> values = ofType(key.getDeclaringClass());
         if (values == null) {
@@ -916,6 +923,8 @@ public class MagicValues<T extends Enum<T>> {
 
     private final Map<T, Object> values;
     private final Map<Object, T> reverse;
+    private T defaultKey;
+    private Object defaultValue;
 
     private MagicValues(Class<T> type) {
         values = new EnumMap<T, Object>(type);
@@ -927,12 +936,16 @@ public class MagicValues<T extends Enum<T>> {
             // All numbers are stored as doubles in the reverse lookup map
             value = ((Number) value).doubleValue();
         }
-        return reverse.get(value);
+        T key = reverse.get(value);
+        return key == null ? defaultKey : key;
     }
 
     @SuppressWarnings("unchecked")
     public <V> V getValue(Class<V> valueType, T key) {
         Object val = values.get(key);
+        if (val == null) {
+            val = defaultValue;
+        }
         if (val != null) {
             if (valueType.isAssignableFrom(val.getClass())) {
                 return (V) val;
