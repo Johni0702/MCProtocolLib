@@ -191,7 +191,7 @@ public class MagicValues<T extends Enum<T>> {
         register(CombatState.END_COMBAT, 1);
         register(CombatState.ENTITY_DEAD, 2);
 
-        register(GameMode.SURVIVAL, 0);
+        registerDefault(GameMode.SURVIVAL, 0);
         register(GameMode.CREATIVE, 1);
         register(GameMode.ADVENTURE, 2);
         register(GameMode.SPECTATOR, 3);
