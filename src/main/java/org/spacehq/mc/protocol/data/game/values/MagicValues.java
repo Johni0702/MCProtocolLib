@@ -61,13 +61,14 @@ import org.spacehq.mc.protocol.data.game.values.world.effect.SoundEffect;
 import org.spacehq.mc.protocol.data.game.values.world.notify.ClientNotification;
 import org.spacehq.mc.protocol.data.game.values.world.notify.DemoMessageValue;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class MagicValues {
+public class MagicValues<T extends Enum<T>> {
 
-    private static final Map<Enum<?>, Object> values = new HashMap<Enum<?>, Object>();
+    private static final Map<Class<? extends Enum>, MagicValues> magicValues = new HashMap<Class<? extends Enum>, MagicValues>();
 
     static {
         register(AttributeType.MAX_HEALTH, "generic.maxHealth");
@@ -883,49 +884,71 @@ public class MagicValues {
         register(ResourcePackStatus.ACCEPTED, 3);
     }
 
-    private static void register(Enum<?> key, Object value) {
-        values.put(key, value);
-    }
-
-    @SuppressWarnings({ "unchecked" })
-    public static <T extends Enum<?>> T key(Class<T> keyType, Object value) {
-        for(Enum<?> key : values.keySet()) {
-            Object val = values.get(key);
-            if(keyType.isAssignableFrom(key.getClass())) {
-                if(val == value || val.equals(value)) {
-                    return (T) key;
-                } else if(Number.class.isAssignableFrom(val.getClass()) && Number.class.isAssignableFrom(value.getClass())) {
-                    Number num = (Number) val;
-                    Number num2 = (Number) value;
-                    if(num.doubleValue() == num2.doubleValue()) {
-                        return (T) key;
-                    }
-                }
-            }
+    private static <T extends Enum<T>> void register(T key, Object value) {
+        MagicValues<T> values = ofType(key.getDeclaringClass());
+        if (values == null) {
+            values = new MagicValues<T>(key.getDeclaringClass());
+            magicValues.put(key.getDeclaringClass(), values);
         }
+        values.values.put(key, value);
 
-        return null;
+        if (value instanceof Number) {
+            value = ((Number) value).doubleValue();
+        }
+        values.reverse.put(value, key);
     }
 
     @SuppressWarnings("unchecked")
-    public static <T> T value(Class<T> valueType, Enum<?> key) {
+    public static <T extends Enum<T>> MagicValues<T> ofType(Class<T> keyType) {
+        return magicValues.get(keyType);
+    }
+
+    public static <T extends Enum<T>> T key(Class<T> keyType, Object value) {
+        MagicValues<T> magicValues = ofType(keyType);
+        return magicValues == null ? null : magicValues.key(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, U extends Enum<U>> T value(Class<T> valueType, Enum<U> key) {
+        MagicValues<U> magicValues = ofType(key.getDeclaringClass());
+        return magicValues == null ? null : magicValues.getValue(valueType, (U) key);
+    }
+
+    private final Map<T, Object> values;
+    private final Map<Object, T> reverse;
+
+    private MagicValues(Class<T> type) {
+        values = new EnumMap<T, Object>(type);
+        reverse = new HashMap<Object, T>();
+    }
+
+    public T key(Object value) {
+        if (value instanceof Number) {
+            // All numbers are stored as doubles in the reverse lookup map
+            value = ((Number) value).doubleValue();
+        }
+        return reverse.get(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <V> V getValue(Class<V> valueType, T key) {
         Object val = values.get(key);
-        if(val != null) {
-            if(valueType.isAssignableFrom(val.getClass())) {
-                return (T) val;
-            } else if(Number.class.isAssignableFrom(val.getClass())) {
-                if(valueType == Byte.class) {
-                    return (T) (Object) ((Number) val).byteValue();
-                } else if(valueType == Short.class) {
-                    return (T) (Object) ((Number) val).shortValue();
-                } else if(valueType == Integer.class) {
-                    return (T) (Object) ((Number) val).intValue();
-                } else if(valueType == Long.class) {
-                    return (T) (Object) ((Number) val).longValue();
-                } else if(valueType == Float.class) {
-                    return (T) (Object) ((Number) val).floatValue();
-                } else if(valueType == Double.class) {
-                    return (T) (Object) ((Number) val).doubleValue();
+        if (val != null) {
+            if (valueType.isAssignableFrom(val.getClass())) {
+                return (V) val;
+            } else if (Number.class.isAssignableFrom(val.getClass())) {
+                if (valueType == Byte.class) {
+                    return (V) (Object) ((Number) val).byteValue();
+                } else if (valueType == Short.class) {
+                    return (V) (Object) ((Number) val).shortValue();
+                } else if (valueType == Integer.class) {
+                    return (V) (Object) ((Number) val).intValue();
+                } else if (valueType == Long.class) {
+                    return (V) (Object) ((Number) val).longValue();
+                } else if (valueType == Float.class) {
+                    return (V) (Object) ((Number) val).floatValue();
+                } else if (valueType == Double.class) {
+                    return (V) (Object) ((Number) val).doubleValue();
                 }
             }
         }
