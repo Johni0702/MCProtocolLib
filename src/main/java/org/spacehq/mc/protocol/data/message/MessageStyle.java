@@ -113,7 +113,7 @@ public class MessageStyle implements Cloneable {
         if(!formats.equals(style.formats)) return false;
         if(hover != null ? !hover.equals(style.hover) : style.hover != null) return false;
         if(insertion != null ? !insertion.equals(style.insertion) : style.insertion != null) return false;
-        if(!parent.equals(style.parent)) return false;
+        if(parent != null ? !parent.equals(style.parent) : style.parent != null) return false;
 
         return true;
     }
@@ -125,7 +125,7 @@ public class MessageStyle implements Cloneable {
         result = 31 * result + (click != null ? click.hashCode() : 0);
         result = 31 * result + (hover != null ? hover.hashCode() : 0);
         result = 31 * result + (insertion != null ? insertion.hashCode() : 0);
-        result = 31 * result + parent.hashCode();
+        result = 31 * result + (parent != null ? parent.hashCode() : 0);
         return result;
     }
 
